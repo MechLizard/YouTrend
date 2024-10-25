@@ -9,7 +9,7 @@ Installation:
 ```npm install express oracledb dotenv```
 
 2. Setup .env File <br/>
-*Note: Copy/Paste the following in the .env file (replace USER and PASSWORD with your valid information)*
+*Note: Copy/Paste the following in the .env file you create (replace USER and PASSWORD with your valid information)*
 
 ```ORACLE_USER=YourGatorlinkUsername``` <br/>
 ```ORACLE_PASSWORD=YourDatabasePassword``` <br/>
