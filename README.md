@@ -3,15 +3,13 @@ Organizing and displaying information about trending youtube videos from a datas
 
 Installation:
 
-1. Clone Repo <br/>
-```git clone https://github.com/MechLizard/YouTrend.git``` <br/>
-```cd YouTrend```
+*Assuming your repo is forked and cloned already*
 
-2. Install Dependencies <br/>
+1. Install Dependencies <br/>
 ```npm install express oracledb dotenv```
 
 3. Setup .env File <br/>
-*Note: Copy/Paste the following in the .env file (replace USER and PASSWORD)
+*Note: Copy/Paste the following in the .env file (replace USER and PASSWORD with your valid information)*
 
 ```ORACLE_USER=YourGatorlinkUsername``` <br/>
 ```ORACLE_PASSWORD=YourDatabasePassword``` <br/>
