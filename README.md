@@ -13,9 +13,9 @@ Installation:
 3. Setup .env File <br/>
 *Note: Copy/Paste the following in the .env file (replace USER and PASSWORD)
 
-ORACLE_USER=YourGatorlinkUsername <br/>
-ORACLE_PASSWORD=YourDatabasePassword <br/>
-ORACLE_CONNECTION_STRING=oracle.cise.ufl.edu:1521/orcl
+```ORACLE_USER=YourGatorlinkUsername``` <br/>
+```ORACLE_PASSWORD=YourDatabasePassword``` <br/>
+```ORACLE_CONNECTION_STRING=oracle.cise.ufl.edu:1521/orcl```
 
 4. Start Server <br/>
 ```cd Backend``` <br/>
