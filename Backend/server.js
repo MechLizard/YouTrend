@@ -18,12 +18,17 @@ async function connectToDatabase() {
     }
 }
 
-// will modify according to queries, but placeholder for now
-app.get('/api/data', async (req, res) => {
+app.get('/', (req, res) => {
+    res.send("API is working!");
+});
+
+// GET Data from "User" table in DB
+app.get('/api/users', async (req, res) => {
     let connection;
     try {
         connection = await oracledb.getConnection();
-        const result = await connection.execute(`SELECT * FROM your_table`);
+        const result = await connection.execute(`SELECT * FROM "User"`);
+        console.log(result);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
