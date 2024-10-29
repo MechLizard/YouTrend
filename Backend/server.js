@@ -1,12 +1,14 @@
 const express = require('express');
 const oracledb = require('oracledb');
 const bodyParser = require('body-parser');
+const cors = require('cors');  // CORS middleware allows domain communication
 require('dotenv').config({ path: '../.env' });
 
 const app = express();
 const PORT = 5000;
 
 app.use(bodyParser.json());
+app.use(cors());  // Enable CORS for all routes
 
 async function connectToDatabase() {
     try {
