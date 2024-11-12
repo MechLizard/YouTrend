@@ -133,3 +133,140 @@ export const TextLink = styled(Link)`
         color: darkslategray;  // Change color on hover 
     }
 `
+
+
+// HOMEPAGE
+
+// Home Page Container
+export const HomeContainer = styled.div`
+  padding: 40px;
+  background-color: white;
+  min-height: 100vh;
+`;
+
+// Header Section
+export const Header = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+`;
+
+// Page Title and Description
+export const PageTitle = styled.h1`
+  font-size: 28px;
+  color: ${({ theme }) => theme.colors.textPrimary};
+  text-align: center;
+`;
+
+export const PageDescription = styled.p`
+  font-size: 16px;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  text-align: center;
+  margin-bottom: 20px;
+`;
+
+// Tabs Container
+export const TabsContainer = styled.div`
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 20px;
+`;
+
+// Individual Tab Styles
+export const Tab = styled.div`
+  flex: 1;
+  min-width: 200px;
+  max-width: 300px;
+  padding: 20px;
+  background-color: ${({ theme }) => theme.colors.primary};
+  border-radius: 8px;
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+`;
+
+export const TabTitle = styled.h2`
+  font-size: 20px;
+  margin-bottom: 10px;
+`;
+
+export const TabDescription = styled.p`
+  font-size: 14px;
+  margin-bottom: 10px;
+`;
+
+export const TabImage = styled.img`
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin-bottom: 10px;
+`;
+
+export const TabButton = styled(Link)`
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: ${({ theme }) => theme.colors.secondary};
+  color: #fff;
+  text-decoration: none;
+  border-radius: 4px;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.accent};
+  }
+`;
+
+// PAGES
+
+// Page Container
+export const PageContainer = styled.div`
+  padding: 40px;
+  background-color: white;
+  min-height: 100vh;
+`;
+
+// Form Container
+export const FormContainer = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin: 20px 0;
+  align-items: center;
+`;
+
+// Select (Drop-Down Menu)
+export const Select = styled.select`
+  padding: 10px;
+  width: 200px;
+  border-radius: 4px;
+  border: 1px solid ${({ theme }) => theme.colors.primary};
+  font-size: 16px;
+`;
+
+// Submit Button
+export const SubmitButton = styled.button`
+  background-color: ${({ theme }) => theme.colors.accent};
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.primary};
+  }
+`;
+
+export const TabImageAlt = styled.img`
+  width: 50%;
+  height: 80%;        /* Set a fixed height */
+  border-radius: 4px;
+  justify-content: center;
+`;
