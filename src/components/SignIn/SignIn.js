@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { BGContainer, Form, FormButton, FormContent, FormH1, FormInput, FormLabel, FormWrap,
     Icon, TextLink } from '../GlobalStyles/Elements'; // Import global styled components
-
+//                         <TextLink to="/home">TEMP HOME PAGE</TextLink>
 function SignIn() {
   return (
         <BGContainer>
@@ -23,6 +23,7 @@ function SignIn() {
                         />
                         <FormButton type='submit'>Continue</FormButton>
                         <TextLink to="/register">CREATE AN ACCOUNT</TextLink>
+                        <TextLink to="/home">TEMP HOME PAGE</TextLink>
                     </Form>
                 </FormContent>
             </FormWrap>
