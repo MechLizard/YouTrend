@@ -231,19 +231,33 @@ export const PageContainer = styled.div`
   min-height: 100vh;
 `;
 
-// Form Container
+// Form Container (Aligned Horizontally)
 export const FormContainer = styled.form`
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  flex-direction: row;   /* Align elements horizontally */
+  gap: 20px;             /* Space between elements */
   margin: 20px 0;
-  align-items: center;
+  align-items: center;   /* Center align the elements vertically */
+  justify-content: center; /* Center align the elements horizontally */
+  flex-wrap: wrap;       /* Allow wrapping on smaller screens */
 `;
+
+// Form Container (Aligned Vertically)
+export const FormContainer2 = styled.form`
+  display: flex;
+  flex-direction: column;   /* Align elements horizontally */
+  gap: 20px;             /* Space between elements */
+  margin: 20px 0;
+  align-items: center;   /* Center align the elements vertically */
+  justify-content: center; /* Center align the elements horizontally */
+  flex-wrap: wrap;       /* Allow wrapping on smaller screens */
+`;
+
 
 // Select (Drop-Down Menu)
 export const Select = styled.select`
   padding: 10px;
-  width: 200px;
+  width: 150px;
   border-radius: 4px;
   border: 1px solid ${({ theme }) => theme.colors.primary};
   font-size: 16px;
@@ -269,4 +283,25 @@ export const TabImageAlt = styled.img`
   height: 80%;        /* Set a fixed height */
   border-radius: 4px;
   justify-content: center;
+`;
+
+export const Input = styled.input`
+  width: 150px;
+  padding: 10px 15px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  color: #333;
+  background-color: #f9f9f9;
+  outline: none;
+
+  &:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  }
+
+  &::placeholder {
+    color: #999;
+  }
 `;

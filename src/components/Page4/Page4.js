@@ -13,7 +13,7 @@ import {
   Input
 } from '../GlobalStyles/Elements';
 
-function Page1() {
+function Page4() {
   const [selection, setSelection] = useState({
     country: '',
     categoryId: '',
@@ -70,7 +70,7 @@ function Page1() {
       </Header>
 
       {/* Page Title and Description */}
-      <PageTitle>Page 1</PageTitle>
+      <PageTitle>Page 4</PageTitle>
       <PageDescription>Select your search criteria for trending videos.</PageDescription>
 
       {/* Form Section */}
@@ -129,11 +129,11 @@ function Page1() {
         <SubmitButton type="submit">Submit</SubmitButton>
 
         {/* Image Section */}
-        <TabImageAlt src="/images/tab1.jpg" alt="Tab 1 Image" />
+        <TabImageAlt src="/images/tab4.jpg" alt="Tab 4 Image" />
       </FormContainer2>
 
     </PageContainer>
   );
 }
 
-export default Page1;
+export default Page4;
