@@ -90,7 +90,7 @@ app.post('/api/users/send', async (req, res) => {
 
 // Time & Day Success Query Routes
 app.get('/api/time-date-success', async (req, res) => {
-    const { country, categoryId, startDate, endDate, tag } = req.query || {};;
+    const { country, categoryId, startDate, endDate, tag } = req.query || {};
 
     try {
         const data = await fetchTimeDaySuccess({ country, categoryId, startDate, endDate, tag });
@@ -103,7 +103,7 @@ app.get('/api/time-date-success', async (req, res) => {
 
 // Disabled Videos Query Routes
 app.get('/api/disabled-videos', async (req, res) => {
-  const { country, categoryId, startDate, endDate, tag, commentsDisabled, ratingsDisabled, videoRemoved } = req.query;
+  const { country, categoryId, startDate, endDate, tag, commentsDisabled, ratingsDisabled, videoRemoved } = req.query || {};;
 
   try {
       const result = await fetchDisabledVideos({
@@ -117,11 +117,11 @@ app.get('/api/disabled-videos', async (req, res) => {
           videoRemoved: videoRemoved === 'true'          // Convert to boolean
       });
 
-      res.json(result);
+      return res.json(result);
 
   } catch (err) {
       console.error("Error in /disabled-videos route:", err);
-      res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ error: "Internal server error" });
   }
 
 })
