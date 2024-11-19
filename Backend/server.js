@@ -4,6 +4,9 @@ const bodyParser = require('body-parser');
 const cors = require('cors');  // CORS middleware allows domain communication
 require('dotenv').config({ path: '../.env' });
 
+// DB Queries
+const { fetchTimeDaySuccess, fetchDisabledVideos, fetchTrendingData, fetchEventInfo, fetchPopularityData, fetchSentimentData } = require('../Backend/dbQueries');
+
 const app = express();
 const PORT = 5000;
 
@@ -84,6 +87,118 @@ app.post('/api/users/send', async (req, res) => {
         }
     }
 });
+
+// Time & Day Success Query Routes
+app.get('/api/time-date-success', async (req, res) => {
+    const { country, categoryId, startDate, endDate, tag } = req.query || {};;
+
+    try {
+        const data = await fetchTimeDaySuccess({ country, categoryId, startDate, endDate, tag });
+        return res.json(data);
+      } catch (err) {
+        console.error("Error fetching time/date data:", err);
+        return res.status(500).json({ error: "Error fetching time/date data", details: err.message });
+      }
+})
+
+// Disabled Videos Query Routes
+app.get('/api/disabled-videos', async (req, res) => {
+  const { country, categoryId, startDate, endDate, tag, commentsDisabled, ratingsDisabled, videoRemoved } = req.query;
+
+  try {
+      const result = await fetchDisabledVideos({
+          country, 
+          categoryId, 
+          startDate, 
+          endDate, 
+          tag, 
+          commentsDisabled: commentsDisabled === 'true', // Convert to boolean
+          ratingsDisabled: ratingsDisabled === 'true',   // Convert to boolean
+          videoRemoved: videoRemoved === 'true'          // Convert to boolean
+      });
+
+      res.json(result);
+
+  } catch (err) {
+      console.error("Error in /disabled-videos route:", err);
+      res.status(500).json({ error: "Internal server error" });
+  }
+
+})
+
+// Events Query Routes
+app.get('/api/trending-data', async (req, res) => {
+    const { country, categoryId, startDate, endDate, tag } = req.query;
+
+    try {
+        const trendingData = await fetchTrendingData({
+            country,
+            categoryId,
+            startDate,
+            endDate,
+            tag
+        });
+
+        res.json(trendingData);
+    } catch (err) {
+        res.status(500).send("Error fetching trending data");
+    }
+});
+
+app.get('/api/event-info', async (req, res) => {
+    const { eventName } = req.query;
+  
+    try {
+      const eventData = await fetchEventInfo(eventName);
+      
+      if (eventData.length > 0) {
+        res.json(eventData);
+      } else {
+        res.status(404).send("Event not found");
+      }
+    } catch (err) {
+      res.status(500).send("Error fetching event information");
+    }
+  });
+
+// Popularity Query Routes
+app.get('/api/popularity-data', async (req, res) => {
+    const { country, categoryId, startDate, endDate, tag } = req.query; // extra input? selection?
+
+  try {
+    const popularityData = await fetchPopularityData({
+      country,
+      categoryId,
+      startDate,
+      endDate,
+      tag
+    });
+
+    res.json(popularityData);
+  } catch (err) {
+    res.status(500).send("Error fetching popularity data");
+  }
+})
+
+// Sentiment Query Routes
+app.get('/api/sentiment-data', async (req, res) => {
+    const { country, categoryId, startDate, endDate, tag } = req.query;
+    
+    try {
+        const sentimentData = await fetchSentimentData({
+          country,
+          categoryId,
+          startDate,
+          endDate,
+          tag
+        });
+    
+        res.json(sentimentData);
+      } catch (err) {
+        res.status(500).send("Error fetching sentiment data");
+      }
+})
+
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
