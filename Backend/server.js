@@ -103,7 +103,7 @@ app.get('/api/time-date-success', async (req, res) => {
 
 // Disabled Videos Query Routes
 app.get('/api/disabled-videos', async (req, res) => {
-  const { country, category_id: categoryId, start_date: startDate, end_date: endDate, tag, comments_disabled: commentsDisabled, ratings_disabled: ratingsDisabled, video_error_or_removed: videoRemoved } = req.query || {};;
+  const { country, category_id: categoryId, start_date: startDate, end_date: endDate, tag, comments_disabled: commentsDisabled, ratings_disabled: ratingsDisabled, video_error_or_removed: videoRemoved } = req.query || {};
 
   console.log("Received query parameters:", req.query);
 
@@ -130,25 +130,25 @@ app.get('/api/disabled-videos', async (req, res) => {
 
 // Events Query Routes
 app.get('/api/trending-data', async (req, res) => {
-    const { country, categoryId, startDate, endDate, tag } = req.query;
+    const { country, category_id: categoryId, start_date: startDate, end_date: endDate, tag } = req.query || {};
 
     try {
-        const trendingData = await fetchTrendingData({
-            country,
-            categoryId,
-            startDate,
-            endDate,
-            tag
-        });
+      const trendingData = await fetchTrendingData({
+          country,
+          categoryId,
+          startDate,
+          endDate,
+          tag
+      });
 
-        res.json(trendingData);
+      return res.json(trendingData);
     } catch (err) {
-        res.status(500).send("Error fetching trending data");
+      return res.status(500).send("Error fetching trending data");
     }
 });
 
 app.get('/api/event-info', async (req, res) => {
-    const { eventName } = req.query;
+    const { event_name: eventName } = req.query;
   
     try {
       const eventData = await fetchEventInfo(eventName);

@@ -194,47 +194,72 @@ async function fetchTrendingData({ country, categoryId, startDate, endDate, tag 
   let connection;
   try {
     connection = await oracledb.getConnection();
-
-    let baseSelect = `
-    SELECT trending_date, SUM(views) AS views
-  `;
-  let baseConditions = `
-    WHERE (publish_country LIKE :country OR :country = '%')
-    AND (category_id = :category_id OR :category_id IS NULL)
-    AND trending_date BETWEEN TO_DATE(:start_date, 'DD-MM-YY') AND TO_DATE(:end_date, 'DD-MM-YY')
-  `;
   
-  const attributes = {
-    country: country || '%',
-    category_id: categoryId || null,
-    start_date: startDate || '14-11-17',
-    end_date: endDate || '14-06-18'
-  };
+    const attributes = {
+      country: country || '%',
+      category_id: categoryId || null,
+      start_date: startDate || '14-11-17',
+      end_date: endDate || '14-06-18'
+    };
+    if (tag) {
+      attributes.tag = `%${tag}%`;
+    }
 
-  let joinTagTable = '';
-  if (tag) {
-    joinTagTable = `JOIN tag_association ON video.video_id = tag_association.video_id`;
-    baseConditions += ` AND tag_association.tag_string LIKE :tag`;
-    attributes.tag = tag;
-  }
+    const tagJoin = tag
+        ? `JOIN tag_association ON video.video_id = tag_association.video_id`
+        : '';
+    const tagCondition = tag
+      ? `AND tag_association.tag_string LIKE :tag`
+      : '';
 
-  // Full SQL query
-  const trending_data_sql = `
-    ${baseSelect}
-    FROM (
-      SELECT trending_date, views,
-             ROW_NUMBER() OVER (PARTITION BY video.video_id ORDER BY views DESC) AS rn
-      FROM Video
-      ${joinTagTable}
-      ${baseConditions}
-    )
-    WHERE rn = 1
-    GROUP BY trending_date
-    ORDER BY trending_date
-  `;
+    // Full SQL query
+    const trending_data_sql = `
+    SELECT trending_date, 
+              SUM(unique_video.views) AS views,
+              SUM(unique_video.likes) AS likes, 
+              SUM(unique_video.dislikes) AS dislikes, 
+              SUM(unique_video.comment_count) AS comment_count,
+              MAX(best_daily.top_video_id) AS top_video_id,
+              MAX(best_daily.top_video_title) AS top_video_title,
+              MAX(best_daily.top_video_views) AS top_video_views,
+              MAX(best_daily.top_video_likes) AS top_video_likes,
+              MAX(best_daily.top_video_dislikes) AS top_video_dislikes
+        FROM (
+            SELECT trending_date, views, likes, dislikes, comment_count,
+                  ROW_NUMBER() OVER (PARTITION BY video.video_id ORDER BY views DESC) AS rn
+            FROM Video
+            ${tagJoin}
+            WHERE (publish_country LIKE :country OR :country = '%')
+              AND (category_id = :category_id OR :category_id IS NULL)
+              AND trending_date BETWEEN TO_DATE(:start_date, 'DD-MM-YY') AND TO_DATE(:end_date, 'DD-MM-YY')
+              ${tagCondition}
+        ) unique_video
+        JOIN (
+            SELECT trending_date AS top_video_trending_date, 
+                  video_id AS top_video_id,
+                  title AS top_video_title,
+                  views AS top_video_views,
+                  likes AS top_video_likes,
+                  dislikes AS top_video_dislikes
+            FROM (
+                SELECT trending_date, video.video_id, title, views, likes, dislikes,
+                      ROW_NUMBER() OVER (PARTITION BY trending_date ORDER BY views DESC) AS day_rank
+                FROM Video
+                ${tagJoin}
+                WHERE (publish_country LIKE :country OR :country = '%')
+                  AND (category_id = :category_id OR :category_id IS NULL)
+                  AND trending_date BETWEEN TO_DATE(:start_date, 'DD-MM-YY') AND TO_DATE(:end_date, 'DD-MM-YY')
+                  ${tagCondition}
+            )
+            WHERE day_rank = 1
+        ) best_daily ON unique_video.trending_date = best_daily.top_video_trending_date
+        WHERE rn = 1
+        GROUP BY trending_date
+        ORDER BY trending_date
+    `;
 
-  const result = await connection.execute(trending_data_sql, attributes);
-  return result.rows;
+    const result = await connection.execute(trending_data_sql, attributes);
+    return result.rows;
 
   } catch (err) {
     console.error("Error executing 'Trending Data' query:", err);
