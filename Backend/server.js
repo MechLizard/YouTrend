@@ -90,7 +90,7 @@ app.post('/api/users/send', async (req, res) => {
 
 // Time & Day Success Query Routes
 app.get('/api/time-date-success', async (req, res) => {
-    const { country, categoryId, startDate, endDate, tag } = req.query || {};
+    const { country, category_id: categoryId, start_date: startDate, end_date: endDate, tag } = req.query || {};
 
     try {
         const data = await fetchTimeDaySuccess({ country, categoryId, startDate, endDate, tag });
@@ -165,7 +165,7 @@ app.get('/api/event-info', async (req, res) => {
 
 // Popularity Query Routes
 app.get('/api/popularity-data', async (req, res) => {
-    const { country, categoryId, startDate, endDate, tag } = req.query; // extra input? selection?
+    const { country, category_id: categoryId, start_date: startDate, end_date: endDate, tag } = req.query || {}; // extra input? selection?
 
   try {
     const popularityData = await fetchPopularityData({
@@ -184,7 +184,7 @@ app.get('/api/popularity-data', async (req, res) => {
 
 // Sentiment Query Routes
 app.get('/api/sentiment-data', async (req, res) => {
-    const { country, categoryId, startDate, endDate, tag } = req.query;
+  const { country, category_id: categoryId, start_date: startDate, end_date: endDate, tag } = req.query || {};
     
     try {
         const sentimentData = await fetchSentimentData({

@@ -293,39 +293,66 @@ async function fetchPopularityData({ country, categoryId, startDate, endDate, ta
   try {
     connection = await oracledb.getConnection();
 
-    let baseSelect = `
-      SELECT trending_date, SUM(views) AS views, SUM(likes) AS likes, SUM(dislikes) AS dislikes, SUM(comment_count) AS comments
-    `;
-    let baseConditions = `
-      WHERE (publish_country LIKE :country OR :country = '%')
-      AND (category_id = :category_id OR :category_id IS NULL)
-      AND trending_date BETWEEN TO_DATE(:start_date, 'DD-MM-YY') AND TO_DATE(:end_date, 'DD-MM-YY')
-    `;
-
     const attributes = {
       country: country || '%',
       category_id: categoryId || null,
       start_date: startDate || '14-11-17',
       end_date: endDate || '14-06-18'
     };
-
-    let joinTagTable = '';
     if (tag) {
-      joinTagTable = `JOIN tag_association ON video.video_id = tag_association.video_id`;
-      baseConditions += ` AND tag_association.tag_string LIKE :tag OR :tag = '%'`;
-      attributes.tag = tag;
+      attributes.tag = `%${tag}%`;
     }
+
+    const tagJoin = tag
+        ? `JOIN tag_association ON video.video_id = tag_association.video_id`
+        : '';
+    const tagCondition = tag
+      ? `AND tag_association.tag_string LIKE :tag`
+      : '';
 
     // Full SQL query for popularity
     const popularity_sql = `
-      ${baseSelect}
-      FROM (
-        SELECT trending_date, views, likes, dislikes, comment_count,
-               ROW_NUMBER() OVER (PARTITION BY video.video_id ORDER BY views DESC) AS rn
-        FROM Video
-        ${joinTagTable}
-        ${baseConditions}
-      )
+      SELECT trending_date,
+      SUM(unique_video.views) AS views,
+      SUM(unique_video.likes) AS likes, 
+      SUM(unique_video.dislikes) AS dislikes, 
+      SUM(unique_video.comment_count) AS comment_count,
+      MAX(best_daily.top_video_id) AS top_video_id,
+      MAX(best_daily.top_video_title) AS top_video_title,
+      MAX(best_daily.top_video_views) AS top_video_views,
+      MAX(best_daily.top_video_likes) AS top_video_likes,
+      MAX(best_daily.top_video_dislikes) AS top_video_dislikes
+      FROM ( 
+          SELECT trending_date, views, likes, dislikes, comment_count,
+                ROW_NUMBER() OVER (PARTITION BY video.video_id ORDER BY views DESC) AS rn
+          FROM Video
+          ${tagJoin}
+          WHERE (publish_country LIKE :country OR :country = '%')
+          AND (category_id = :category_id OR :category_id IS NULL)
+          AND trending_date BETWEEN TO_Date(:start_date, 'DD-MM-YY') 
+                          and TO_Date(:end_date, 'DD-MM-YY')
+          ${tagCondition}
+      ) unique_video
+      JOIN ( -- Gets the best performing video for that day.
+          SELECT trending_date AS top_video_trending_date, 
+          video_id AS top_video_id,
+          title AS top_video_title,
+          views AS top_video_views,
+          likes AS top_video_likes,
+          dislikes AS top_video_dislikes
+          FROM (
+              SELECT trending_date, video.video_id, title, views, likes, dislikes,
+                    ROW_NUMBER() OVER (PARTITION BY trending_date ORDER BY views DESC) AS day_rank
+              FROM Video
+              ${tagJoin}
+              WHERE (publish_country LIKE :country OR :country = '%') 
+                AND (category_id = :category_id OR :category_id IS NULL)
+                AND trending_date BETWEEN TO_Date(:start_date, 'DD-MM-YY')
+                AND TO_Date(:end_date, 'DD-MM-YY')
+                ${tagCondition}
+          )
+          WHERE day_rank = 1
+      ) best_daily ON unique_video.trending_date = top_video_trending_date 
       WHERE rn = 1
       GROUP BY trending_date
       ORDER BY trending_date
@@ -345,44 +372,67 @@ async function fetchSentimentData({ country, categoryId, startDate, endDate, tag
   try {
     connection = await oracledb.getConnection();
 
-    let baseSelect = `
-      SELECT trending_date, AVG(likes) AS avg_likes, AVG(dislikes) AS avg_dislikes,
-             AVG(CASE 
-                 WHEN dislikes = 0 THEN likes / 1
-                 ELSE likes / dislikes
-             END) AS like_dislike_ratio
-    `;
-    let baseConditions = `
-      WHERE (publish_country LIKE :country OR :country = '%')
-      AND (category_id = :category_id OR :category_id IS NULL)
-      AND trending_date BETWEEN TO_DATE(:start_date, 'DD-MM-YY') AND TO_DATE(:end_date, 'DD-MM-YY')
-    `;
-
     const attributes = {
       country: country || '%',
       category_id: categoryId || null,
       start_date: startDate || '14-11-17',
       end_date: endDate || '14-06-18'
     };
-
-    let joinTagTable = '';
     if (tag) {
-      joinTagTable = `JOIN tag_association ON video.video_id = tag_association.video_id`;
-      baseConditions += ` AND tag_association.tag_string LIKE :tag OR :tag = '%'`;
-      attributes.tag = tag;
+      attributes.tag = `%${tag}%`;
     }
 
-    // Full SQL query for sentiment analysis
+    const tagJoin = tag
+        ? `JOIN tag_association ON video.video_id = tag_association.video_id`
+        : '';
+    const tagCondition = tag
+      ? `AND tag_association.tag_string LIKE :tag`
+      : '';
+
     const sentiment_sql = `
-      ${baseSelect}
-      FROM (
-        SELECT trending_date, views, likes, dislikes,
-               ROW_NUMBER() OVER (PARTITION BY video.video_id ORDER BY views DESC) AS rn
-        FROM Video
-        ${joinTagTable}
-        ${baseConditions}
-      )
-      WHERE rn = 1
+      SELECT trending_date, 
+      avg(likes) AS avg_likes, avg(dislikes) AS avg_dislikes, 
+      AVG(CASE 
+          WHEN dislikes = 0 THEN likes / 1
+          ELSE likes / dislikes
+      END) AS like_dislike_ratio,
+      MAX(best_daily.top_video_id) AS top_video_id,
+      MAX(best_daily.top_video_title) AS top_video_title,
+      MAX(best_daily.top_video_views) AS top_video_views,
+      MAX(best_daily.top_video_likes) AS top_video_likes,
+      MAX(best_daily.top_video_dislikes) AS top_video_dislikes
+      FROM ( -- Only gets the relevant version of non-unique video IDs
+          SELECT trending_date, views, likes, dislikes,
+                ROW_NUMBER() OVER (PARTITION BY video.video_id ORDER BY views DESC) AS rn
+          FROM Video
+          ${tagJoin}
+          WHERE (publish_country LIKE :country OR :country = '%')
+          AND (category_id = :category_id OR :category_id IS NULL)
+          AND trending_date BETWEEN TO_Date(:start_date, 'DD-MM-YY') 
+          AND TO_Date(:end_date, 'DD-MM-YY')
+          ${tagCondition}
+      ) unique_video
+      JOIN ( -- Gets the best performing video for that day.
+          SELECT trending_date AS top_video_trending_date, 
+          video_id AS top_video_id,
+          title AS top_video_title,
+          views AS top_video_views,
+          likes AS top_video_likes,
+          dislikes AS top_video_dislikes
+          FROM (
+              SELECT trending_date, video.video_id, title, views, likes, dislikes,
+                    ROW_NUMBER() OVER (PARTITION BY trending_date ORDER BY views DESC) AS day_rank
+              FROM Video
+              ${tagJoin}
+              WHERE (publish_country LIKE :country OR :country = '%') -- When implemented in javascript this line should have an If statement that doesn't run if tag sorting isn't needed.
+                AND (category_id = :category_id OR :category_id IS NULL)
+                AND trending_date BETWEEN TO_Date(:start_date, 'DD-MM-YY')
+                AND TO_Date(:end_date, 'DD-MM-YY')
+                ${tagCondition}
+          )  
+          WHERE day_rank = 1
+      ) best_daily ON unique_video.trending_date = top_video_trending_date -- Combines the two subqueries.
+      WHERE rn = 1  -- Selects the first unique in each row in video_id
       GROUP BY trending_date
       ORDER BY trending_date
     `;
