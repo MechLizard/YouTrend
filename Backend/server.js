@@ -103,7 +103,9 @@ app.get('/api/time-date-success', async (req, res) => {
 
 // Disabled Videos Query Routes
 app.get('/api/disabled-videos', async (req, res) => {
-  const { country, categoryId, startDate, endDate, tag, commentsDisabled, ratingsDisabled, videoRemoved } = req.query || {};;
+  const { country, category_id: categoryId, start_date: startDate, end_date: endDate, tag, comments_disabled: commentsDisabled, ratings_disabled: ratingsDisabled, video_error_or_removed: videoRemoved } = req.query || {};;
+
+  console.log("Received query parameters:", req.query);
 
   try {
       const result = await fetchDisabledVideos({
@@ -112,9 +114,9 @@ app.get('/api/disabled-videos', async (req, res) => {
           startDate, 
           endDate, 
           tag, 
-          commentsDisabled: commentsDisabled === 'true', // Convert to boolean
-          ratingsDisabled: ratingsDisabled === 'true',   // Convert to boolean
-          videoRemoved: videoRemoved === 'true'          // Convert to boolean
+          commentsDisabled: commentsDisabled === 'True', // Convert to boolean
+          ratingsDisabled: ratingsDisabled === 'True',   // Convert to boolean
+          videoRemoved: videoRemoved === 'True'          // Convert to boolean
       });
 
       return res.json(result);
