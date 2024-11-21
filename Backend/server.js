@@ -90,7 +90,7 @@ app.post('/api/users/send', async (req, res) => {
 
 // Time & Day Success Query Routes
 app.get('/api/time-date-success', async (req, res) => {
-    const { country, categoryId, startDate, endDate, tag } = req.query || {};;
+    const { country, category_id: categoryId, start_date: startDate, end_date: endDate, tag } = req.query || {};
 
     try {
         const data = await fetchTimeDaySuccess({ country, categoryId, startDate, endDate, tag });
@@ -103,7 +103,9 @@ app.get('/api/time-date-success', async (req, res) => {
 
 // Disabled Videos Query Routes
 app.get('/api/disabled-videos', async (req, res) => {
-  const { country, categoryId, startDate, endDate, tag, commentsDisabled, ratingsDisabled, videoRemoved } = req.query;
+  const { country, category_id: categoryId, start_date: startDate, end_date: endDate, tag, comments_disabled: commentsDisabled, ratings_disabled: ratingsDisabled, video_error_or_removed: videoRemoved } = req.query || {};
+
+  console.log("Received query parameters:", req.query);
 
   try {
       const result = await fetchDisabledVideos({
@@ -112,41 +114,41 @@ app.get('/api/disabled-videos', async (req, res) => {
           startDate, 
           endDate, 
           tag, 
-          commentsDisabled: commentsDisabled === 'true', // Convert to boolean
-          ratingsDisabled: ratingsDisabled === 'true',   // Convert to boolean
-          videoRemoved: videoRemoved === 'true'          // Convert to boolean
+          commentsDisabled: commentsDisabled === 'True', // Convert to boolean
+          ratingsDisabled: ratingsDisabled === 'True',   // Convert to boolean
+          videoRemoved: videoRemoved === 'True'          // Convert to boolean
       });
 
-      res.json(result);
+      return res.json(result);
 
   } catch (err) {
       console.error("Error in /disabled-videos route:", err);
-      res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ error: "Internal server error" });
   }
 
 })
 
 // Events Query Routes
 app.get('/api/trending-data', async (req, res) => {
-    const { country, categoryId, startDate, endDate, tag } = req.query;
+    const { country, category_id: categoryId, start_date: startDate, end_date: endDate, tag } = req.query || {};
 
     try {
-        const trendingData = await fetchTrendingData({
-            country,
-            categoryId,
-            startDate,
-            endDate,
-            tag
-        });
+      const trendingData = await fetchTrendingData({
+          country,
+          categoryId,
+          startDate,
+          endDate,
+          tag
+      });
 
-        res.json(trendingData);
+      return res.json(trendingData);
     } catch (err) {
-        res.status(500).send("Error fetching trending data");
+      return res.status(500).send("Error fetching trending data");
     }
 });
 
 app.get('/api/event-info', async (req, res) => {
-    const { eventName } = req.query;
+    const { event_name: eventName } = req.query;
   
     try {
       const eventData = await fetchEventInfo(eventName);
@@ -163,7 +165,7 @@ app.get('/api/event-info', async (req, res) => {
 
 // Popularity Query Routes
 app.get('/api/popularity-data', async (req, res) => {
-    const { country, categoryId, startDate, endDate, tag } = req.query; // extra input? selection?
+    const { country, category_id: categoryId, start_date: startDate, end_date: endDate, tag } = req.query || {}; // extra input? selection?
 
   try {
     const popularityData = await fetchPopularityData({
@@ -182,7 +184,7 @@ app.get('/api/popularity-data', async (req, res) => {
 
 // Sentiment Query Routes
 app.get('/api/sentiment-data', async (req, res) => {
-    const { country, categoryId, startDate, endDate, tag } = req.query;
+  const { country, category_id: categoryId, start_date: startDate, end_date: endDate, tag } = req.query || {};
     
     try {
         const sentimentData = await fetchSentimentData({
