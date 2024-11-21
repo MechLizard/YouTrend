@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import {
   PageContainer,
   Header,
@@ -13,20 +14,62 @@ import {
   Input
 } from '../GlobalStyles/Elements';
 
+// Register Chart.js components
+import { Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+
+// Register Chart.js components
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
 function Page5() {
   const [selection, setSelection] = useState({
     country: '',
     categoryId: '',
     startDate: '14-11-17',
     endDate: '14-06-18',
-    tag: ''
+    tag: '',
   });
+  
+  const [results, setResults] = useState([]); // State for query results
+  const [loading, setLoading] = useState(false); // State for loading indicator
+  const [error, setError] = useState(null); // State for error handling
 
-  // Sample options (replace with your actual values)
-  const countries = ['USA', 'Canada', 'UK', 'Australia'];
-  const categories = ['1', '2', '10', '15', '17', '20', '22']; // Example category IDs
-
-  // Handle input changes
+  const countries = ['US', 'Canada', 'UK', 'Australia'];
+  const categoryMapping = {
+    1: "Film & Animation",
+    2: "Autos & Vehicles",
+    10: "Music",
+    15: "Pets & Animals",
+    17: "Sports",
+    18: "Short Movies",
+    19: "Travel & Events",
+    20: "Gaming",
+    21: "Videoblogging",
+    22: "People & Blogs",
+    23: "Comedy",
+    24: "Entertainment",
+    25: "News & Politics",
+    26: "Howto & Style",
+    27: "Education",
+    28: "Science & Technology",
+    29: "Nonprofits & Activism",
+    30: "Movies",
+    31: "Anime/Animation",
+    32: "Action/Adventure",
+    33: "Classics",
+    34: "Comedy",
+    35: "Documentary",
+    36: "Drama",
+    37: "Family",
+    38: "Foreign",
+    39: "Horror",
+    40: "Sci-Fi/Fantasy",
+    41: "Thriller",
+    42: "Shorts",
+    43: "Shows",
+    44: "Trailers"
+  };
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setSelection((prev) => ({
@@ -35,47 +78,63 @@ function Page5() {
     }));
   };
 
-  // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError(null);
 
-    // Format date inputs if needed
-    const formattedStartDate = formatToOracleDate(selection.startDate);
-    const formattedEndDate = formatToOracleDate(selection.endDate);
+  try {
+    // Construct query string for GET request
+    const queryParams = new URLSearchParams(selection).toString();
 
-    // Construct query parameters
-    const query = {
-      country: selection.country || '%',
-      categoryId: selection.categoryId || null,
-      startDate: formattedStartDate,
-      endDate: formattedEndDate,
-      tag: selection.tag || '%'
-    };
+    // Make the GET request using axios
+    const response = await axios.get(`http://localhost:5000/api/popularity-data?${queryParams}`);
 
-    alert(`Query Parameters: ${JSON.stringify(query)}`);
-    // You can now use `query` to make a request to your Oracle database.
-  };
+    // Handle the response
+    if (response.status === 200) {
+      console.log(response.data);
+      setResults(response.data); // Save the results to state
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error.response ? error.response.data : error.message);
+    setError('An error occurred while fetching data.');
+  } finally {
+    setLoading(false);
+  }
+};
 
-  // Helper function to format date to 'DD-MM-YY'
-  const formatToOracleDate = (date) => {
-    const [year, month, day] = date.split('-');
-    return `${day}-${month}-${year.slice(2)}`; // Convert 'YYYY-MM-DD' to 'DD-MM-YY'
-  };
+const formatDate = (date) => {
+  const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+  return new Intl.DateTimeFormat('en-CA', options).format(new Date(date)); // 'YYYY-MM-DD'
+};
 
   return (
     <PageContainer>
-      {/* Logo and Navigation */}
       <Header>
         <Icon to="/home">YouTrend</Icon>
       </Header>
 
-      {/* Page Title and Description */}
-      <PageTitle>Page 5</PageTitle>
-      <PageDescription>Select your search criteria for trending videos.</PageDescription>
+      <PageTitle>P5</PageTitle>
+      <PageDescription>
+      Explore how the volume of views/comments/ratings count changed over time.
+      </PageDescription>
 
-      {/* Form Section */}
       <FormContainer onSubmit={handleSubmit}>
-        {/* Country Dropdown */}
+        <Input
+          type="text"
+          name="tag"
+          value={selection.tag}
+          onChange={handleChange}
+          placeholder="Enter a tag (e.g., 'comedy', 'news')"
+        />
+        <Select name="categoryId" value={selection.categoryId} onChange={handleChange}>
+          <option value="">Select Category</option>
+          {Object.entries(categoryMapping).map(([id, name]) => (
+            <option key={id} value={id}>
+              {name}
+            </option>
+          ))}
+        </Select>
         <Select name="country" value={selection.country} onChange={handleChange}>
           <option value="">Select Country</option>
           {countries.map((country) => (
@@ -84,53 +143,27 @@ function Page5() {
             </option>
           ))}
         </Select>
-
-        {/* Category ID Dropdown */}
-        <Select name="categoryId" value={selection.categoryId} onChange={handleChange}>
-          <option value="">Select Category ID</option>
-          {categories.map((id) => (
-            <option key={id} value={id}>
-              {id}
-            </option>
-          ))}
-        </Select>
-
-        {/* Start Date Input */}
         <Input
-          type="date"
+          type="text"
           name="startDate"
           value={selection.startDate}
           onChange={handleChange}
-          placeholder="Start Date"
+          placeholder="Enter Start Date (DD-MM-YY)"
         />
-
-        {/* End Date Input */}
         <Input
-          type="date"
+          type="text"
           name="endDate"
           value={selection.endDate}
           onChange={handleChange}
-          placeholder="End Date"
+          placeholder="Enter End Date (DD-MM-YY)"
         />
 
-        {/* Tag Input with Autocomplete (Basic Implementation) */}
-        <Input
-          type="text"
-          name="tag"
-          value={selection.tag}
-          onChange={handleChange}
-          placeholder="Enter a tag (e.g., 'comedy', 'news')"
-        />
-
-
-      </FormContainer>
-      <FormContainer2>
-        {/* Submit Button */}
         <SubmitButton type="submit">Submit</SubmitButton>
+      </FormContainer>
 
-        {/* Image Section */}
-        <TabImageAlt src="/images/tab5.jpg" alt="Tab 5 Image" />
-      </FormContainer2>
+
+      {loading && <p>Loading...</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
 
     </PageContainer>
   );

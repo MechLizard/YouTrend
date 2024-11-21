@@ -92,6 +92,8 @@ app.post('/api/users/send', async (req, res) => {
 app.get('/api/time-date-success', async (req, res) => {
     const { country, category_id: categoryId, start_date: startDate, end_date: endDate, tag } = req.query || {};
 
+    console.log("Received query parameters:", req.query);
+
     try {
         const data = await fetchTimeDaySuccess({ country, categoryId, startDate, endDate, tag });
         return res.json(data);
@@ -167,6 +169,8 @@ app.get('/api/event-info', async (req, res) => {
 app.get('/api/popularity-data', async (req, res) => {
     const { country, category_id: categoryId, start_date: startDate, end_date: endDate, tag } = req.query || {}; // extra input? selection?
 
+    console.log("Received query parameters:", req.query);
+
   try {
     const popularityData = await fetchPopularityData({
       country,
@@ -206,3 +210,27 @@ app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     connectToDatabase();
 });
+
+app.post('/api/users/login', async (req, res) => {
+  const { email, password } = req.body;
+  let connection;
+  try {
+      connection = await oracledb.getConnection();
+      const query = `SELECT * FROM "User" WHERE email = :email AND password = :password`;
+      const result = await connection.execute(query, [email, password]);
+
+      if (result.rows.length > 0) {
+          res.json({ success: true, user: result.rows[0] }); // Return user data if found
+      } else {
+          res.status(401).json({ success: false, message: "Invalid credentials" });
+      }
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ success: false, message: "Internal server error" });
+  } finally {
+      if (connection) {
+          await connection.close();
+      }
+  }
+});
+
