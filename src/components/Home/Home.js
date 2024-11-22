@@ -17,14 +17,14 @@ function Home() {
   // Data for the 5 tabs
   const tabsData = [
     {
-      title: 'Tab 1',
-      description: 'This is the description for Tab 1.',
+      title: 'Time & Day',
+      description: 'Explore how the day and time of trending video uploads changed over time and if it impacts popularity.',
       image: '/images/tab1.jpg',
       link: '/page1',
     },
     {
-      title: 'Tab 2',
-      description: 'This is the description for Tab 2.',
+      title: 'Disabled Metrics',
+      description: 'Explore how keywords, tags, and categories most associated with disabled comments or ratings changed over time.',
       image: '/images/tab2.jpg',
       link: '/page2',
     },
