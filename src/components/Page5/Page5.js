@@ -24,9 +24,9 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 function Page5() {
   const [selection, setSelection] = useState({
     country: '',
-    categoryId: '',
-    startDate: '14-11-17',
-    endDate: '14-06-18',
+    category_id: '',
+    start_date: '14-11-17',
+    end_date: '14-06-18',
     tag: '',
   });
   
@@ -127,7 +127,7 @@ const formatDate = (date) => {
           onChange={handleChange}
           placeholder="Enter a tag (e.g., 'comedy', 'news')"
         />
-        <Select name="categoryId" value={selection.categoryId} onChange={handleChange}>
+        <Select name="category_id" value={selection.category_id} onChange={handleChange}>
           <option value="">Select Category</option>
           {Object.entries(categoryMapping).map(([id, name]) => (
             <option key={id} value={id}>
@@ -145,15 +145,15 @@ const formatDate = (date) => {
         </Select>
         <Input
           type="text"
-          name="startDate"
-          value={selection.startDate}
+          name="start_date"
+          value={selection.start_date}
           onChange={handleChange}
           placeholder="Enter Start Date (DD-MM-YY)"
         />
         <Input
           type="text"
-          name="endDate"
-          value={selection.endDate}
+          name="end_date"
+          value={selection.end_date}
           onChange={handleChange}
           placeholder="Enter End Date (DD-MM-YY)"
         />
