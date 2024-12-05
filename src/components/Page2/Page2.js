@@ -38,7 +38,7 @@ function Page2() {
   const [loading, setLoading] = useState(false); // State for loading indicator
   const [error, setError] = useState(null); // State for error handling
 
-  const countries = ['US', 'Canada', 'UK', 'Australia'];
+  const countries = ['US', 'GB', 'FRANCE', 'CANADA'];
   const categoryMapping = {
     1: "Film & Animation",
     2: "Autos & Vehicles",

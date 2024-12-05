@@ -36,7 +36,7 @@ function Page4() {
   const [loading, setLoading] = useState(false); // State for loading indicator
   const [error, setError] = useState(null); // State for error handling
 
-  const countries = ['US', 'Canada', 'UK', 'Australia'];
+  const countries = ['US', 'GB', 'FRANCE', 'CANADA'];
   const metrics = ['views', 'comments', 'likes', 'dislikes'];
   const categoryMapping = {
     1: "Film & Animation",
@@ -121,6 +121,10 @@ const generateLabels = (data) => {
 
 const prepareBarChartData = (data) => {
   const labels = generateLabels(data); // Generate sorted, unique dates for the X-axis
+  
+  // Calculate scaling factor based on the maximum value of row[6]
+  const maxViews = Math.max(...data.map(row => row[6])); // Get max views
+  const scalingFactor = maxViews ? maxViews / 1000 : 1; // Avoid division by zero
 
   return {
     labels,
@@ -137,8 +141,8 @@ const prepareBarChartData = (data) => {
         })),
       },
       {
-        label: 'Dislike/Like Ratio',
-        data: data.map((row) => row[3] * 1000000), 
+        label: 'Like/Dislike Ratio',
+        data: data.map((row) => row[3] * scalingFactor), 
         backgroundColor: 'rgba(250, 26, 38, 0.6)', // Different bar color
         borderColor: 'rgba(250, 26, 38, 1)', // Different border color
         borderWidth: 1,
@@ -208,7 +212,7 @@ const barChartOptions = {
         Explore how sentiment effects views and if it has changed over time.
       </PageDescription>
       <PageDescription>
-        *Note higher dislike/like ratios will have a larger bar!
+        *Note higher like/dislike ratios will have a larger bar!
       </PageDescription>
 
       <FormContainer onSubmit={handleSubmit}>
