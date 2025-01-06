@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import {
   PageContainer,
   Header,
@@ -13,69 +14,223 @@ import {
   Input
 } from '../GlobalStyles/Elements';
 
+// Register Chart.js components
+import { Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+
+// Register Chart.js components
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
+
 function Page4() {
   const [selection, setSelection] = useState({
     country: '',
-    categoryId: '',
-    startDate: '14-11-17',
-    endDate: '14-06-18',
+    category_id: '',
+    start_date: '14-11-17',
+    end_date: '14-06-18',
     tag: ''
   });
+  
+  
+  const [results, setResults] = useState([]); // State for query results
+  const [loading, setLoading] = useState(false); // State for loading indicator
+  const [error, setError] = useState(null); // State for error handling
 
-  // Sample options (replace with your actual values)
-  const countries = ['USA', 'Canada', 'UK', 'Australia'];
-  const categories = ['1', '2', '10', '15', '17', '20', '22']; // Example category IDs
+  const countries = ['US', 'GB', 'FRANCE', 'CANADA'];
+  const metrics = ['views', 'comments', 'likes', 'dislikes'];
+  const categoryMapping = {
+    1: "Film & Animation",
+    2: "Autos & Vehicles",
+    10: "Music",
+    15: "Pets & Animals",
+    17: "Sports",
+    18: "Short Movies",
+    19: "Travel & Events",
+    20: "Gaming",
+    21: "Videoblogging",
+    22: "People & Blogs",
+    23: "Comedy",
+    24: "Entertainment",
+    25: "News & Politics",
+    26: "Howto & Style",
+    27: "Education",
+    28: "Science & Technology",
+    29: "Nonprofits & Activism",
+    30: "Movies",
+    31: "Anime/Animation",
+    32: "Action/Adventure",
+    33: "Classics",
+    34: "Comedy",
+    35: "Documentary",
+    36: "Drama",
+    37: "Family",
+    38: "Foreign",
+    39: "Horror",
+    40: "Sci-Fi/Fantasy",
+    41: "Thriller",
+    42: "Shorts",
+    43: "Shows",
+    44: "Trailers"
+  };  
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setSelection((prev) => ({
       ...prev,
-      [name]: value
+      [name]: name === 'categoryId' ? Number(value) : value
     }));
+  };  
+  
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError(null);
+
+  try {
+    // Construct query string for GET request
+    const queryParams = new URLSearchParams(selection).toString();
+
+    // Make the GET request using axios
+    const response = await axios.get(`http://localhost:5000/api/sentiment-data?${queryParams}`);
+
+    // Handle the response
+    if (response.status === 200) {
+      console.log(response.data);
+      setResults(response.data); // Save the results to state
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error.response ? error.response.data : error.message);
+    setError('An error occurred while fetching data.');
+  } finally {
+    setLoading(false);
+  }
+};
+
+const formatDate = (date) => {
+  const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+  return new Intl.DateTimeFormat('en-CA', options).format(new Date(date)); // 'YYYY-MM-DD'
+};
+
+const generateLabels = (data) => {
+  const dates = data.map(row => formatDate(row[0])); // Format all dates
+  const uniqueDates = Array.from(new Set(dates)); // Remove duplicates
+  uniqueDates.sort((a, b) => new Date(a) - new Date(b)); // Sort dates
+  return uniqueDates; // Return formatted, sorted, unique dates
+};
+
+const prepareBarChartData = (data) => {
+  const labels = generateLabels(data); // Generate sorted, unique dates for the X-axis
+  
+  // Calculate scaling factor based on the maximum value of row[6]
+  const maxViews = Math.max(...data.map(row => row[6])); // Get max views
+  const scalingFactor = maxViews ? maxViews / 1000 : 1; // Avoid division by zero
+
+  return {
+    labels,
+    datasets: [
+      {
+        label: 'Views',
+        data: data.map((row) => row[6]), 
+        backgroundColor: 'rgba(255, 159, 64, 0.6)', // Bar color
+        borderColor: 'rgba(255, 159, 64, 1)', // Border color
+        borderWidth: 1,
+        custom: data.map((row) => ({
+          topVideoTitle: row[5], // Assuming top_video_title is in column 7
+          topVideoViews: row[6], // Assuming top_video_views is in column 8
+        })),
+      },
+      {
+        label: 'Like/Dislike Ratio',
+        data: data.map((row) => row[3] * scalingFactor), 
+        backgroundColor: 'rgba(250, 26, 38, 0.6)', // Different bar color
+        borderColor: 'rgba(250, 26, 38, 1)', // Different border color
+        borderWidth: 1,
+        custom: data.map((row) => ({
+          topVideoTitle: row[5],
+          topVideoViews: row[6],
+        })),
+      },
+    ],
   };
+};
 
-  // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
 
-    // Format date inputs if needed
-    const formattedStartDate = formatToOracleDate(selection.startDate);
-    const formattedEndDate = formatToOracleDate(selection.endDate);
+const barChartOptions = {
+  responsive: true,
+  plugins: {
+    title: {
+      display: true,
+      text: 'Stacked Bar Chart: Metric and Top Video Views over Time',
+    },
+    legend: {
+      position: 'top',
+    },
+    tooltip: {
+      callbacks: {
+        label: function (context) {
+          const { raw, datasetIndex, dataIndex } = context;
+          const customData = context.chart.data.datasets[datasetIndex].custom[dataIndex];
+          const title = customData?.topVideoTitle || 'N/A';
+          const views = customData?.topVideoViews || 'N/A';
 
-    // Construct query parameters
-    const query = {
-      country: selection.country || '%',
-      categoryId: selection.categoryId || null,
-      startDate: formattedStartDate,
-      endDate: formattedEndDate,
-      tag: selection.tag || '%'
-    };
-
-    alert(`Query Parameters: ${JSON.stringify(query)}`);
-    // You can now use `query` to make a request to your Oracle database.
-  };
-
-  // Helper function to format date to 'DD-MM-YY'
-  const formatToOracleDate = (date) => {
-    const [year, month, day] = date.split('-');
-    return `${day}-${month}-${year.slice(2)}`; // Convert 'YYYY-MM-DD' to 'DD-MM-YY'
-  };
+          return [
+            `${context.dataset.label}: ${raw}`,
+            `Top Video: ${title}`,
+            `Views: ${views}`,
+          ];
+        },
+      },
+    },
+  },
+  scales: {
+    x: {
+      stacked: true, // Enable stacking for the X-axis
+      title: {
+        display: true,
+        text: 'Dates',
+      },
+    },
+    y: {
+      stacked: true, // Enable stacking for the Y-axis
+      title: {
+        display: true,
+        text: 'Counts',
+      },
+    },
+  },
+};
 
   return (
     <PageContainer>
-      {/* Logo and Navigation */}
       <Header>
         <Icon to="/home">YouTrend</Icon>
       </Header>
 
-      {/* Page Title and Description */}
-      <PageTitle>Page 4</PageTitle>
-      <PageDescription>Select your search criteria for trending videos.</PageDescription>
+      <PageTitle>Sentiment</PageTitle>
+      <PageDescription>
+        Explore how sentiment effects views and if it has changed over time.
+      </PageDescription>
+      <PageDescription>
+        *Note higher like/dislike ratios will have a larger bar!
+      </PageDescription>
 
-      {/* Form Section */}
       <FormContainer onSubmit={handleSubmit}>
-        {/* Country Dropdown */}
+        <Input
+          type="text"
+          name="tag"
+          value={selection.tag}
+          onChange={handleChange}
+          placeholder="Enter a tag (e.g., 'comedy', 'news')"
+        />
+        <Select name="category_id" value={selection.category_id} onChange={handleChange}>
+          <option value="">Select Category</option>
+          {Object.entries(categoryMapping).map(([id, name]) => (
+            <option key={id} value={id}>
+              {name}
+            </option>
+          ))}
+        </Select>
         <Select name="country" value={selection.country} onChange={handleChange}>
           <option value="">Select Country</option>
           {countries.map((country) => (
@@ -84,53 +239,33 @@ function Page4() {
             </option>
           ))}
         </Select>
-
-        {/* Category ID Dropdown */}
-        <Select name="categoryId" value={selection.categoryId} onChange={handleChange}>
-          <option value="">Select Category ID</option>
-          {categories.map((id) => (
-            <option key={id} value={id}>
-              {id}
-            </option>
-          ))}
-        </Select>
-
-        {/* Start Date Input */}
-        <Input
-          type="date"
-          name="startDate"
-          value={selection.startDate}
-          onChange={handleChange}
-          placeholder="Start Date"
-        />
-
-        {/* End Date Input */}
-        <Input
-          type="date"
-          name="endDate"
-          value={selection.endDate}
-          onChange={handleChange}
-          placeholder="End Date"
-        />
-
-        {/* Tag Input with Autocomplete (Basic Implementation) */}
         <Input
           type="text"
-          name="tag"
-          value={selection.tag}
+          name="start_date"
+          value={selection.start_date}
           onChange={handleChange}
-          placeholder="Enter a tag (e.g., 'comedy', 'news')"
+          placeholder="Enter Start Date (DD-MM-YY)"
+        />
+        <Input
+          type="text"
+          name="end_date"
+          value={selection.end_date}
+          onChange={handleChange}
+          placeholder="Enter End Date (DD-MM-YY)"
         />
 
-
-      </FormContainer>
-      <FormContainer2>
-        {/* Submit Button */}
         <SubmitButton type="submit">Submit</SubmitButton>
+      </FormContainer>
 
-        {/* Image Section */}
-        <TabImageAlt src="/images/tab4.jpg" alt="Tab 4 Image" />
-      </FormContainer2>
+      {loading && <p>Loading...</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <div>
+      {results.length > 0 ? (
+        <Bar data={prepareBarChartData(results)} options={barChartOptions} />
+      ) : (
+        <p>No data available to display as a chart.</p>
+      )}
+      </div>
 
     </PageContainer>
   );

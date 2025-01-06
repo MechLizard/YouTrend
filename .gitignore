@@ -1,3 +1,6 @@
 .env
 node_modules
 package-lock.json
+youtrend database backup
+CISE Oracle.sql
+.DS_Store

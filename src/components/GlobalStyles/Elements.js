@@ -259,7 +259,8 @@ export const Select = styled.select`
   padding: 10px;
   width: 150px;
   border-radius: 4px;
-  border: 1px solid ${({ theme }) => theme.colors.primary};
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
   font-size: 16px;
 `;
 
@@ -303,5 +304,28 @@ export const Input = styled.input`
 
   &::placeholder {
     color: #999;
+  }
+`;
+
+export const MultiSelect = styled.select`
+  padding: 10px;
+  width: 200px;
+  height: auto;
+  border-radius: 4px;
+  border: 1px solid ${({ theme }) => theme.colors.primary};
+  font-size: 16px;
+  color: ${({ theme }) => theme.colors.textPrimary};
+  background-color: ${({ theme }) => theme.colors.backgroundSecondary};
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.accent};
+    box-shadow: 0 0 5px ${({ theme }) => theme.colors.accent};
+  }
+
+  option {
+    padding: 10px;
+    font-size: 14px;
   }
 `;
