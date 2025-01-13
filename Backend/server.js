@@ -1,8 +1,7 @@
 const express = require('express');
-const oracledb = require('oracledb');
 const bodyParser = require('body-parser');
 const cors = require('cors');  // CORS middleware allows domain communication
-require('dotenv').config({ path: '../.env' });
+const { useEffect, useState } = require('react');
 
 // DB Queries
 const { fetchTimeDaySuccess, fetchDisabledVideos, fetchTrendingData, fetchEventInfo, fetchPopularityData, fetchSentimentData } = require('../Backend/dbQueries');
@@ -12,19 +11,6 @@ const PORT = 5000;
 
 app.use(bodyParser.json());
 app.use(cors());  // Enable CORS for all routes
-
-async function connectToDatabase() {
-    try {
-        await oracledb.createPool({
-            user: process.env.ORACLE_USER,
-            password: process.env.ORACLE_PASSWORD,
-            connectString: process.env.ORACLE_CONNECTION_STRING,
-        });
-        console.log("Connected to Oracle Database!");
-    } catch (err) {
-        console.error("Failed to connect to database", err);
-    }
-}
 
 app.get('/', (req, res) => {
     res.send("API is working!");
@@ -208,7 +194,6 @@ app.get('/api/sentiment-data', async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
-    connectToDatabase();
 });
 
 app.post('/api/users/login', async (req, res) => {
@@ -233,4 +218,3 @@ app.post('/api/users/login', async (req, res) => {
       }
   }
 });
-
