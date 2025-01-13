@@ -1,81 +1,29 @@
 const oracledb = require('oracledb');
+const { useEffect } = require('react');
+const { supabase } = require('./supabaseClient');
 
 // *=== Time/Day Success ===* //
-async function fetchTimeDaySuccess({ country, categoryId, startDate, endDate, tag }) {
-    let connection;
-    try {
-      connection = await oracledb.getConnection();
-      let time_day_sql = `
-        SELECT 
-            unique_video.publish_date, 
-            unique_video.published_day_of_week, 
-            SUM(unique_video.views) AS views,
-            SUM(unique_video.likes) AS likes, 
-            SUM(unique_video.dislikes) AS dislikes, 
-            SUM(unique_video.comment_count) AS comment_count,
-            MAX(best_daily.top_video_id) AS top_video_id,
-            MAX(best_daily.top_video_title) AS top_video_title,
-            MAX(best_daily.top_video_views) AS top_video_views,
-            MAX(best_daily.top_video_likes) AS top_video_likes,
-            MAX(best_daily.top_video_dislikes) AS top_video_dislikes
-        FROM (
-            SELECT publish_date, published_day_of_week, views, likes, dislikes, comment_count,
-                    ROW_NUMBER() OVER (PARTITION BY video.video_id ORDER BY views DESC) AS rn
-            FROM Video
-            ${tag ? 'JOIN tag_association ON video.video_id = tag_association.video_id' : ''} 
-            WHERE (publish_country LIKE :country OR :country = '%')
-              AND (category_id = :category_id OR :category_id IS NULL)
-              AND publish_date BETWEEN TO_DATE(:start_date, 'DD-MM-YY') AND TO_DATE(:end_date, 'DD-MM-YY')
-              ${tag ? 'AND tag_association.tag_string LIKE :tag' : ''} 
-        ) unique_video
-        JOIN (
-            SELECT publish_date AS top_video_publish_date, 
-                    video_id AS top_video_id,
-                    title AS top_video_title,
-                    views AS top_video_views,
-                    likes AS top_video_likes,
-                    dislikes AS top_video_dislikes
-            FROM (
-                SELECT publish_date, video.video_id, title, views, likes, dislikes,
-                        ROW_NUMBER() OVER (PARTITION BY publish_date ORDER BY views DESC) AS day_rank
-                FROM Video
-                ${tag ? 'JOIN tag_association ON video.video_id = tag_association.video_id' : ''} 
-                WHERE (publish_country LIKE :country OR :country = '%')
-                  AND (category_id = :category_id OR :category_id IS NULL)
-                  AND publish_date BETWEEN TO_DATE(:start_date, 'DD-MM-YY') AND TO_DATE(:end_date, 'DD-MM-YY')
-                  ${tag ? 'AND tag_association.tag_string LIKE :tag' : ''} 
-            )
-            WHERE day_rank = 1
-        ) best_daily 
-        ON unique_video.publish_date = top_video_publish_date
-        WHERE rn = 1
-        GROUP BY unique_video.publish_date, unique_video.published_day_of_week
-        ORDER BY unique_video.publish_date
-      `;
+async function fetchTimeDaySuccess({ country = '%', categoryId = null, startDate, endDate, tag = null }) {
+      try {
+        const { data, error } = await supabase.rpc('fetch_video_data', {
+          p_country: country,
+          p_category_id: categoryId,
+          p_start_date: startDate,
+          p_end_date: endDate,
+          p_tag: tag,
+        });
 
-      const attributes = {
-        country: country || '%',
-        category_id: categoryId || null,
-        start_date: startDate || '14-11-17',
-        end_date: endDate || '14-06-18'
-      };
+        if (error){
+          console.log(error);
+        }
 
-      if (tag) {
-        attributes.tag = `%${tag}%`;
-      }
+        return data;
 
-      const result = await connection.execute(time_day_sql, attributes);
-      return result.rows;
-
-    } catch (err) {
+      } catch (err) {
         console.error("Error executing 'Time/Day Success' query:", err);
-        throw err;
-    } finally {
-      if (connection) {
-        await connection.close(); // closes connection to prevent timeouts
-      }
+        return null;
     }
-};
+}
 
 
 // *=== Disabled Videos ===* //
